@@ -1,6 +1,8 @@
-package app.commands;
+package app.service.telegram;
 
+import app.data.TelegramUser;
 import app.service.PresentAdviserService;
+import app.service.telegram.commands.*;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -13,26 +15,25 @@ import javax.annotation.PostConstruct;
 import java.util.stream.Stream;
 
 @Service
-public final class AnonymizerBot extends TelegramLongPollingCommandBot {
+public final class TelegramRandomPresentBot extends TelegramLongPollingCommandBot {
 
-    private static final String BOT_NAME = "ZoiaRandomPresentBot";
+    private static final String BOT_NAME = "RandomPresentBot";
     private static final String BOT_TOKEN = "1245434636:AAGtThzj6S6UZxyPNMgX1mYVleNJF5snvKM";
 
-    private final AnonymousService mAnonymouses;
+    private final TelegramUserService userService;
 
-    public AnonymizerBot(PresentAdviserService presentAdviserService) {
+    public TelegramRandomPresentBot(TelegramUserService userService, PresentAdviserService presentAdviserService) {
         super();
-        this.mAnonymouses = new AnonymousService();
-        register(new StartCommand( mAnonymouses));
-        register(new SetNameCommand(mAnonymouses));
-        register(new StopCommand(mAnonymouses));
-        register(new SetGenderCommand(mAnonymouses));
-        register(new MyNameCommand(mAnonymouses));
-        register(new GetRecipientInfoCommand(mAnonymouses));
-        register(new SetAgeCommand(mAnonymouses));
-        register(new AdviceCommand(mAnonymouses, presentAdviserService));
-        HelpCommand helpCommand = new HelpCommand(this);
-        register(helpCommand);
+        this.userService = userService;
+        register(new TelegramStartCommand(userService));
+        //register(new TelegramSetNameCommand(userService));
+        register(new TelegramStopCommand(userService));
+        register(new TelegramSetGenderCommand(userService));
+        register(new TelegramGetRecipientInfoCommand(userService));
+        register(new TelegramSetAgeCommand(userService));
+        register(new TelegramAdviceCommand(userService, presentAdviserService));
+        TelegramHelpCommand telegramHelpCommand = new TelegramHelpCommand(this);
+        register(telegramHelpCommand);
         registerDefaultAction(((absSender, message) -> {
             SendMessage text = new SendMessage();
             text.setChatId(message.getChatId());
@@ -42,7 +43,7 @@ public final class AnonymizerBot extends TelegramLongPollingCommandBot {
                 absSender.execute(text);
             } catch (TelegramApiException e) {}
 
-            helpCommand.execute(absSender, message.getFrom(), message.getChat(), new String[] {});
+            telegramHelpCommand.execute(absSender, message.getFrom(), message.getChat(), new String[] {});
         }));
 
     }
@@ -72,7 +73,8 @@ public final class AnonymizerBot extends TelegramLongPollingCommandBot {
         }
 
         String clearMessage = msg.getText();
-        String messageForUsers = String.format("%s:\n%s", mAnonymouses.getDisplayedName(user), msg.getText());
+        String messageForUsers = String.format("%s:\n%s", msg.getText());
+                //userService.getDisplayedName(user), msg.getText());
 
         SendMessage answer = new SendMessage();
 
@@ -81,8 +83,8 @@ public final class AnonymizerBot extends TelegramLongPollingCommandBot {
         replyToUser(answer, user, clearMessage);
 
         answer.setText(messageForUsers);
-        Stream<Anonymous> anonymouses = mAnonymouses.anonymouses();
-        anonymouses.filter(a -> !a.getUser().equals(user))
+        Stream<TelegramUser> users = userService.users();
+        users.filter(a -> !a.getUser().equals(user))
                 .forEach(a -> {
                     answer.setChatId(a.getChat().getId());
                     sendMessageToUser(answer, a.getUser(), user);
@@ -100,17 +102,17 @@ public final class AnonymizerBot extends TelegramLongPollingCommandBot {
             return false;
         }
 
-        if(!mAnonymouses.hasAnonymous(user)) {
+        if(!userService.hasUser(user)) {
             answer.setText("Firstly you should start bot! Use /start command!");
             replyToUser(answer, user, msg.getText());
             return false;
         }
 
-        if (mAnonymouses.getDisplayedName(user) == null) {
+/*        if (userService.getDisplayedName(user) == null) {
             answer.setText("You must set a name before sending messages.\nUse '/set_name <displayed_name>' command.");
             replyToUser(answer, user, msg.getText());
             return false;
-        }
+        }*/
 
         return true;
     }
@@ -124,9 +126,7 @@ public final class AnonymizerBot extends TelegramLongPollingCommandBot {
     private void replyToUser(SendMessage message, User user, String messageText) {
         try {
             execute(message);
-   //         LOG.log(Level.getLevel(LogLevel.SUCCESS.getValue()), LogTemplate.MESSAGE_SENT.getTemplate(), user.getId(), messageText);
         } catch (TelegramApiException e) {
-    //        LOG.error(LogTemplate.MESSAGE_EXCEPTION.getTemplate(), user.getId(), e);
         }
     }
 

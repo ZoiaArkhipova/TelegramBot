@@ -1,17 +1,19 @@
-package app.commands;
+package app.service.telegram.commands;
 
+import app.data.TelegramUser;
+import app.service.telegram.TelegramUserService;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-public final class StartCommand extends AnonymizerCommand {
+public final class TelegramStartCommand extends TelegramRandomPresentBotCommand {
 
-    private final AnonymousService mAnonymouses;
+    private final TelegramUserService userService;
 
-    public StartCommand(AnonymousService anonymouses) {
+    public TelegramStartCommand(TelegramUserService userService) {
         super("start", "start using bot\n");
-        mAnonymouses = anonymouses;
+        this.userService = userService;
     }
 
     /**
@@ -29,11 +31,10 @@ public final class StartCommand extends AnonymizerCommand {
         SendMessage message = new SendMessage();
         message.setChatId(chat.getId().toString());
 
-        if (mAnonymouses.addAnonymous(new Anonymous(user, chat))) {
-             sb.append("Hi, ").append(user.getUserName()).append("! You've been added to bot users' list!\n")
-                    .append("Please execute command:\n'/set_name <displayed_name>'\nwhere &lt;displayed_name&gt; is the name you want to use to hide your real name.");
+        if (userService.addUser(new TelegramUser(user, chat))) {
+             sb.append("Hi! You can choose the gender \n '/choose_gender MALE' or \n'/choose_gender FEMALE' and age \n '/choose_age BABY', \n '/choose_age CHILD', \n '/choose_age TEENAGER', \n '/choose_age ADULT' or \n '/choose_age OLDSTER' of the recipient and \n  '/advice'. I will suggest you an idea for a present");
         } else {
-            sb.append("You've already started bot! You can send messages if you set your name (/set_name).");
+            sb.append("You've already started bot!");
         }
 
         message.setText(sb.toString());

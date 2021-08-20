@@ -20,8 +20,6 @@ public class PresentAdviserService {
     private final PersistenceService persistenceService;
     private final MarketApiService marketApiService;
 
-    public static final List<Subcategory> subCategories = new ArrayList<>();
-
     private final Random random = new Random();
 
     public MarketModel getAdvice(Gender gender, Age age) {

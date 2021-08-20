@@ -1,17 +1,17 @@
-package app.commands;//import io.example.anonymizerbot.logger.LogTemplate;
+package app.service.telegram.commands;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.ICommandRegistry;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-public final class HelpCommand extends AnonymizerCommand {
+public final class TelegramHelpCommand extends TelegramRandomPresentBotCommand {
 
-    private final ICommandRegistry mCommandRegistry;
+    private final ICommandRegistry commandRegistry;
 
-    public HelpCommand(ICommandRegistry commandRegistry) {
+    public TelegramHelpCommand(ICommandRegistry commandRegistry) {
         super("help", "list all known commands\n");
-        mCommandRegistry = commandRegistry;
+        this.commandRegistry = commandRegistry;
     }
 
     @Override
@@ -19,7 +19,7 @@ public final class HelpCommand extends AnonymizerCommand {
 
         StringBuilder helpMessageBuilder = new StringBuilder("<b>Available commands:</b>");
 
-        mCommandRegistry.getRegisteredCommands().forEach(cmd -> helpMessageBuilder.append(cmd.toString()).append("\n"));
+        commandRegistry.getRegisteredCommands().forEach(cmd -> helpMessageBuilder.append(cmd.toString()).append("\n"));
 
         SendMessage helpMessage = new SendMessage();
         helpMessage.setChatId(chat.getId().toString());

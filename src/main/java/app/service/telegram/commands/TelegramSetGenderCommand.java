@@ -1,18 +1,19 @@
-package app.commands;
+package app.service.telegram.commands;
 
-import app.data.presentrecipient.Age;
+import app.data.presentrecipient.Gender;
+import app.service.telegram.TelegramUserService;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
-public class SetAgeCommand extends AnonymizerCommand {
+public final class TelegramSetGenderCommand extends TelegramRandomPresentBotCommand {
 
-    private final AnonymousService mAnonymouses;
+    private final TelegramUserService userService;
 
-    public SetAgeCommand(AnonymousService anonymouses) {
-        super("choose_age", "choose your age\n");
-        mAnonymouses = anonymouses;
+    public TelegramSetGenderCommand(TelegramUserService userService) {
+        super("choose_gender", "choose recipient's gender(MALE or FEMALE)\n");
+        this.userService = userService;
     }
 
     @Override
@@ -20,7 +21,7 @@ public class SetAgeCommand extends AnonymizerCommand {
         SendMessage message = new SendMessage();
         message.setChatId(chat.getId().toString());
 
-        if (!mAnonymouses.hasAnonymous(user)) {
+        if (!userService.hasUser(user)) {
             message.setText("Firstly you should start the bot! Execute '/start' command!");
             execute(absSender, message, user);
             return;
@@ -28,11 +29,11 @@ public class SetAgeCommand extends AnonymizerCommand {
 
         StringBuilder sb = new StringBuilder();
         if (arguments == null || arguments.length == 0)
-            sb.append("You haven't selected age");
+            sb.append("You haven't selected gender. Therefore any gender will be selected");
         else {
-            Age age = Age.findByCode(arguments[0]);
-            mAnonymouses.setUserAge(user, age);
-            sb.append("You selected age: ").append(age.getCode());
+            Gender gender = Gender.findByCode(arguments[0]);
+            userService.setUserGender(user, gender);
+            sb.append("You selected gender: ").append(gender.getCode());
         }
 
         message.setText(sb.toString());

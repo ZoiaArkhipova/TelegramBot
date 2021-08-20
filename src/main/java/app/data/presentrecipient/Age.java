@@ -1,10 +1,11 @@
 package app.data.presentrecipient;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 @Getter
 public enum Age {
-    CHILD_IN_ARMS(1,"BABY"),
+    BABY(1,"BABY"),
     CHILD(2,"CHILD"),
     TEENAGER(3,"TEENAGER"),
     ADULT(4,"ADULT"),
@@ -15,7 +16,6 @@ public enum Age {
 
     Age(int dbCode, String code) {
         this.code = code;
-        System.out.println(code);
         this.dbCode = dbCode;
     }
 
@@ -42,6 +42,9 @@ public enum Age {
         }
         throw  new AgeNotExistsException(code + " not supported yet");
     }
-
+    @JsonValue
+    public String getCode(){
+        return this.code;
+    }
 
 }
